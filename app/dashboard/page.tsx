@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { getApiBase, getToken, clearCredentials, ping } from "@/lib/api";
 
@@ -95,7 +95,9 @@ export default function DashboardPage() {
     router.replace("/");
   };
 
-  const ActiveComponent = NAV_ITEMS.find(n => n.id === activeTab)?.component || DashboardHome;
+  const ActiveComponent = useMemo(() => {
+    return NAV_ITEMS.find(n => n.id === activeTab)?.component || DashboardHome;
+  }, [activeTab]);
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", position: "relative", zIndex: 1 }}>
