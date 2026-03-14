@@ -10,7 +10,15 @@ export default function AIChat() {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(0);
   const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setWindowWidth(window.innerWidth);
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -74,7 +82,7 @@ export default function AIChat() {
       </div>
 
       {/* Examples */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: typeof window !== 'undefined' && window.innerWidth < 640 ? 80 : "none", overflowY: "auto" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: windowWidth > 0 && windowWidth < 640 ? 80 : "none", overflowY: "auto" }}>
         {EXAMPLES.map(ex => (
           <button key={ex} className="btn-primary" style={{ fontSize: "0.7rem", padding: "3px 10px" }}
             onClick={() => setInput(ex)}>
@@ -95,7 +103,7 @@ export default function AIChat() {
             display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
           }}>
             <div style={{
-              maxWidth: typeof window !== 'undefined' && window.innerWidth < 640 ? "90%" : "80%",
+              maxWidth: windowWidth > 0 && windowWidth < 640 ? "90%" : "80%",
               background: msg.role === "user"
                 ? "linear-gradient(135deg, rgba(0,212,255,0.25), rgba(124,58,237,0.25))"
                 : "rgba(255,255,255,0.05)",
