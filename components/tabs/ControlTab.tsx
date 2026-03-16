@@ -14,6 +14,8 @@ export default function ControlTab() {
   const [closeTabTarget, setCloseTabTarget] = useState("");
   const [shutdownDelay, setShutdownDelay] = useState(0);
   const [recordDuration, setRecordDuration] = useState(10);
+  const [typeTextVal, setTypeTextVal] = useState("");
+  const [pressKeyVal, setPressKeyVal] = useState("");
   const [loading, setLoading] = useState<string | null>(null);
 
   const run = async (label: string, fn: () => Promise<any>, onSuccess?: (r: any) => void) => {
@@ -116,6 +118,39 @@ export default function ControlTab() {
                   onChange={e => setCloseTabTarget(e.target.value)} placeholder="Domain or Keyword (e.g. youtube)..." />
                 <Btn label="✕ Close Tab" cls="btn-danger" loading={loading}
                   onClick={() => run(`Close Tab ${closeTabTarget}`, () => control("close_tab", { target: closeTabTarget }))} />
+              </div>
+            </div>
+          </div>
+        </Section>
+
+        {/* Keyboard Input */}
+        <Section title="⌨️ Keyboard & Typing">
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "rgba(226,232,240,0.4)", marginBottom: 6, fontWeight: 700 }}>TYPE TEXT</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input className="jarvis-input" style={{ flex: 1 }} value={typeTextVal}
+                  onChange={e => setTypeTextVal(e.target.value)} placeholder="Type something..." />
+                <Btn label="⌨️ Type" cls="btn-primary" loading={loading}
+                  onClick={() => run(`Type Text`, () => control("type_text", { text: typeTextVal }))} />
+              </div>
+            </div>
+            
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "rgba(226,232,240,0.4)", marginBottom: 6, fontWeight: 700 }}>PRESS KEY</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input className="jarvis-input" style={{ flex: 1 }} value={pressKeyVal}
+                  onChange={e => setPressKeyVal(e.target.value)} placeholder="e.g. enter, win, space..." />
+                <Btn label="🖱️ Press" cls="btn-primary" loading={loading}
+                  onClick={() => run(`Press Key ${pressKeyVal}`, () => control("press_key", { key: pressKeyVal }))} />
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                {["enter", "win", "space", "backspace", "tab"].map(k => (
+                  <button key={k} className="btn-primary" style={{ fontSize: "0.7rem", padding: "4px 10px", borderRadius: 6 }}
+                    onClick={() => { setPressKeyVal(k); run(`Press ${k}`, () => control("press_key", { key: k })); }}>
+                    {k}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
