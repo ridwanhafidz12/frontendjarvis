@@ -13,6 +13,7 @@ import KeyloggerTab  from "@/components/tabs/KeyloggerTab";
 import PrankTab      from "@/components/tabs/PrankTab";
 import ConfigTab     from "@/components/tabs/ConfigTab";
 import LogsTab       from "@/components/tabs/LogsTab";
+import VaultTab from "@/components/tabs/VaultTab";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -254,154 +255,26 @@ export default function DashboardPage() {
           background: "rgba(8,12,26,0.98)",
           borderRight: "1px solid rgba(0,212,255,0.12)",
           backdropFilter: "blur(20px)",
-          transition: "width 0.28s cubic-bezier(.4,0,.2,1)",
           overflowX:  "hidden", overflowY: "auto",
-          // Mobile: fixed drawer
+          // transition berbeda untuk mobile vs desktop — tidak duplikat
+          transition: isMobile
+            ? "transform 0.28s cubic-bezier(.4,0,.2,1)"
+            : "width 0.28s cubic-bezier(.4,0,.2,1)",
           ...(isMobile ? {
-            position:   "fixed" as const,
-            top:        0,
-            left:       0,
-            height:     "100vh",
-            zIndex:     130,
-            width:      260,
-            // Gunakan transform saja — jangan campur animation + transform
-            transform:  mobileDrawer ? "translateX(0)" : "translateX(-100%)",
-            transition: "transform 0.28s cubic-bezier(.4,0,.2,1)",
-            boxShadow:  mobileDrawer ? "4px 0 32px rgba(0,0,0,0.6)" : "none",
+            position:  "fixed" as const,
+            top:       0,
+            left:      0,
+            height:    "100vh",
+            zIndex:    130,
+            width:     260,
+            transform: mobileDrawer ? "translateX(0)" : "translateX(-100%)",
+            boxShadow: mobileDrawer ? "4px 0 32px rgba(0,0,0,0.6)" : "none",
           } : {
             position: "sticky" as const,
             top:      0,
             height:   "100vh",
           }),
         }}>
-
-          {/* Logo row */}
-          <div style={{
-            padding: collapsed ? "22px 0" : "22px 18px",
-            borderBottom: "1px solid rgba(0,212,255,0.1)",
-            display: "flex", alignItems: "center",
-            justifyContent: collapsed ? "center" : "flex-start",
-            gap: 12, flexShrink: 0,
-          }}>
-            <div style={{
-              width: 38, height: 38, borderRadius: "50%", flexShrink: 0,
-              background: "linear-gradient(135deg,rgba(0,212,255,0.35),rgba(124,58,237,0.35))",
-              border: "1px solid rgba(0,212,255,0.5)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 18, boxShadow: "0 0 14px rgba(0,212,255,0.18)",
-            }}>🤖</div>
-            {!collapsed && (
-              <div style={{ animation: "pg-fadein 0.2s ease both" }}>
-                <div style={{
-                  fontSize: "1.05rem", fontWeight: 900, color: "#00d4ff",
-                  letterSpacing: "0.18em", textShadow: "0 0 10px rgba(0,212,255,0.3)",
-                }}>JARVIS</div>
-                <div style={{
-                  fontSize: "0.56rem", color: "rgba(226,232,240,0.35)",
-                  letterSpacing: "0.18em", fontWeight: 600, textTransform: "uppercase",
-                }}>System Control</div>
-              </div>
-            )}
-          </div>
-
-          {/* Status */}
-          {!collapsed && (
-            <div style={{
-              padding: "12px 18px", flexShrink: 0,
-              borderBottom: "1px solid rgba(0,212,255,0.06)",
-              background: "rgba(0,212,255,0.02)",
-              display: "flex", alignItems: "center", gap: 10,
-              animation: "pg-fadein 0.2s ease both",
-            }}>
-              <StatusDot online={online} />
-              <span style={{
-                fontSize: "0.78rem", fontWeight: 500,
-                color: online === null ? "#f59e0b" : online ? "#10b981" : "#ef4444",
-              }}>
-                {online === null ? "Initializing…" : online ? "Connected" : "Disconnected"}
-              </span>
-            </div>
-          )}
-
-          {/* Nav items */}
-          <nav style={{
-            flex: 1, padding: collapsed ? "12px 8px" : "12px 10px",
-            display: "flex", flexDirection: "column", gap: 3,
-          }}>
-            {NAV_ITEMS.map(item => (
-              <NavButton
-                key={item.id}
-                item={item}
-                active={activeTab === item.id}
-                collapsed={collapsed}
-                onClick={() => handleNav(item.id)}
-              />
-            ))}
-          </nav>
-
-          {/* Footer */}
-          <div style={{
-            padding: collapsed ? "12px 8px" : "12px 10px",
-            borderTop: "1px solid rgba(0,212,255,0.07)",
-            display: "flex", flexDirection: "column", gap: 3, flexShrink: 0,
-          }}>
-            {/* Collapse toggle — desktop only */}
-            {!isMobile && (
-              <button
-                onClick={() => setSidebarOpen(v => !v)}
-                title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                style={{
-                  width: "100%", border: "none", textAlign: "left",
-                  padding: collapsed ? "10px 0" : "10px 14px",
-                  borderRadius: 10,
-                  display: "flex", alignItems: "center",
-                  justifyContent: collapsed ? "center" : "flex-start",
-                  gap: collapsed ? 0 : 12,
-                  cursor: "pointer",
-                  background: "transparent",
-                  color: "rgba(226,232,240,0.4)",
-                  transition: "all 0.18s",
-                  fontFamily: "inherit",
-                }}
-              >
-                <span style={{ fontSize: "0.9rem" }}>
-                  {collapsed ? "▶" : "◀"}
-                </span>
-                {!collapsed && (
-                  <span style={{ fontSize: "0.85rem", animation: "pg-fadein 0.2s ease both" }}>
-                    Collapse
-                  </span>
-                )}
-              </button>
-            )}
-
-            {/* Logout */}
-            <button
-              onClick={handleLogout}
-              title={collapsed ? "Logout" : undefined}
-              style={{
-                width: "100%", border: "none", textAlign: "left",
-                padding: collapsed ? "10px 0" : "10px 14px",
-                borderRadius: 10,
-                display: "flex", alignItems: "center",
-                justifyContent: collapsed ? "center" : "flex-start",
-                gap: collapsed ? 0 : 12,
-                cursor: "pointer",
-                background: "transparent",
-                color: "#ef4444",
-                transition: "all 0.18s",
-                fontFamily: "inherit",
-              }}
-            >
-              <span style={{ fontSize: "1.1rem" }}>🚪</span>
-              {!collapsed && (
-                <span style={{ fontSize: "0.88rem", fontWeight: 500, animation: "pg-fadein 0.2s ease both" }}>
-                  Logout
-                </span>
-              )}
-            </button>
-          </div>
-        </aside>
 
         {/* ══════════════════════════════════════════════════════════════
             MAIN
