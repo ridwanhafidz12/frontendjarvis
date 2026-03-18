@@ -13,13 +13,14 @@ import KeyloggerTab  from "@/components/tabs/KeyloggerTab";
 import PrankTab      from "@/components/tabs/PrankTab";
 import ConfigTab     from "@/components/tabs/ConfigTab";
 import LogsTab       from "@/components/tabs/LogsTab";
-import VaultTab from "@/components/tabs/VaultTab";
+import VaultTab      from "@/components/tabs/VaultTab";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
 type TabId =
   | "home" | "control" | "terminal" | "files"
-  | "ai" | "cctv" | "keylogger" | "prank" | "config" | "logs" | "vault";
+  | "ai" | "cctv" | "keylogger" | "prank"
+  | "config" | "logs" | "vault";
 
 interface NavItem {
   id:        TabId;
@@ -28,20 +29,20 @@ interface NavItem {
   component: React.ComponentType;
 }
 
-// ── Nav config ─────────────────────────────────────────────────────────────
+// ── Nav items ──────────────────────────────────────────────────────────────
 
 const NAV_ITEMS: NavItem[] = [
-  { id: "home",      icon: "🏠", label: "Dashboard",   component: DashboardHome },
-  { id: "control",   icon: "🎮", label: "Control",     component: ControlTab   },
-  { id: "terminal",  icon: "💻", label: "Shell",       component: TerminalTab  },
-  { id: "files",     icon: "📁", label: "Files",       component: FilesTab     },
-  { id: "ai",        icon: "🧠", label: "AI Chat",     component: AIChat       },
-  { id: "cctv",      icon: "📹", label: "CCTV",        component: CctvTab      },
-  { id: "keylogger", icon: "⌨️", label: "Keylogger",   component: KeyloggerTab },
-  { id: "prank",     icon: "🎭", label: "Prank",       component: PrankTab     },
-  { id: "config",    icon: "⚙️", label: "Config",      component: ConfigTab    },
-  { id: "logs",      icon: "📋", label: "Logs",        component: LogsTab      },
-// { id: "vault", icon: "🔐", label: "Vault", component: VaultTab },
+  { id: "home",      icon: "🏠", label: "Dashboard",  component: DashboardHome },
+  { id: "control",   icon: "🎮", label: "Control",    component: ControlTab    },
+  { id: "terminal",  icon: "💻", label: "Shell",      component: TerminalTab   },
+  { id: "files",     icon: "📁", label: "Files",      component: FilesTab      },
+  { id: "ai",        icon: "🧠", label: "AI Chat",    component: AIChat        },
+  { id: "cctv",      icon: "📹", label: "CCTV",       component: CctvTab       },
+  { id: "keylogger", icon: "⌨️", label: "Keylogger",  component: KeyloggerTab  },
+  { id: "prank",     icon: "🎭", label: "Prank",      component: PrankTab      },
+  { id: "config",    icon: "⚙️", label: "Config",     component: ConfigTab     },
+  { id: "logs",      icon: "📋", label: "Logs",       component: LogsTab       },
+  { id: "vault",     icon: "🔐", label: "Vault",      component: VaultTab      },
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -57,19 +58,15 @@ function useWindowWidth() {
   return w;
 }
 
-// ── Sub-components ─────────────────────────────────────────────────────────
+// ── Status dot ─────────────────────────────────────────────────────────────
 
 function StatusDot({ online }: { online: boolean | null }) {
   const color =
     online === null ? "#f59e0b" :
-    online          ? "#10b981" :
-                      "#ef4444";
+    online          ? "#10b981" : "#ef4444";
   return (
     <span style={{ position: "relative", display: "inline-flex", width: 10, height: 10, flexShrink: 0 }}>
-      <span style={{
-        position: "absolute", inset: 0, borderRadius: "50%",
-        background: color,
-      }} />
+      <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: color }} />
       {online && (
         <span style={{
           position: "absolute", inset: 0, borderRadius: "50%",
@@ -81,9 +78,9 @@ function StatusDot({ online }: { online: boolean | null }) {
   );
 }
 
-function NavButton({
-  item, active, collapsed, onClick,
-}: {
+// ── Nav button ─────────────────────────────────────────────────────────────
+
+function NavButton({ item, active, collapsed, onClick }: {
   item: NavItem; active: boolean; collapsed: boolean; onClick: () => void;
 }) {
   const [hov, setHov] = useState(false);
@@ -104,9 +101,7 @@ function NavButton({
         transition: "all 0.18s",
         background: active
           ? "rgba(0,212,255,0.12)"
-          : hov
-            ? "rgba(255,255,255,0.05)"
-            : "transparent",
+          : hov ? "rgba(255,255,255,0.05)" : "transparent",
         color: active ? "#00d4ff" : "rgba(226,232,240,0.65)",
         borderLeft: active ? "2px solid #00d4ff" : "2px solid transparent",
         fontFamily: "inherit",
@@ -129,50 +124,44 @@ function NavButton({
 // ── Page ───────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const router   = useRouter();
-  const winW     = useWindowWidth();
-  // winW === 0 saat SSR / sebelum hydration — treat as desktop agar tidak flicker
-  // Setelah mount, nilai aktual akan dipakai
+  const router  = useRouter();
+  const winW    = useWindowWidth();
+
+  // Breakpoints — winW===0 saat SSR, treat as desktop supaya tidak flicker
   const isMobile = winW > 0 && winW < 768;
-  const isTablet = winW >= 768 && winW < 1024;
 
-  const [activeTab,      setActiveTab]      = useState<TabId>("home");
-  const [online,         setOnline]         = useState<boolean | null>(null);
-  const [sidebarOpen,    setSidebarOpen]    = useState(true);
-  const [mobileDrawer,   setMobileDrawer]   = useState(false);
-  const [time,           setTime]           = useState(new Date());
+  const [activeTab,    setActiveTab]    = useState<TabId>("home");
+  const [online,       setOnline]       = useState<boolean | null>(null);
+  const [sidebarOpen,  setSidebarOpen]  = useState(true);
+  const [mobileDrawer, setMobileDrawer] = useState(false);
+  const [time,         setTime]         = useState(new Date());
 
-  // Sidebar is collapsed (icon-only) when not fully open on desktop
   const collapsed = !isMobile && !sidebarOpen;
 
-  // ── Auth guard ──────────────────────────────────────────────────────────
+  // Auth guard
   useEffect(() => {
     if (!getApiBase() || !getToken()) router.replace("/");
   }, [router]);
 
-  // ── Responsive sidebar defaults ─────────────────────────────────────────
+  // Responsive defaults — tutup sidebar saat masuk breakpoint kecil
   useEffect(() => {
     if (winW === 0) return;
-    if (winW < 768) {
-      // Mobile: sidebar selalu jadi drawer, pastikan tertutup saat pertama load
-      setSidebarOpen(false);
-      setMobileDrawer(false);
-    } else if (winW < 1024) {
+    if (winW < 1024) {
       setSidebarOpen(false);
       setMobileDrawer(false);
     } else {
       setSidebarOpen(true);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [winW === 0, winW < 768, winW < 1024]); // react to breakpoint crossing only
+  }, [winW < 1024]);
 
-  // ── Clock ───────────────────────────────────────────────────────────────
+  // Clock
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  // ── Ping ────────────────────────────────────────────────────────────────
+  // Ping
   const checkOnline = useCallback(async () => {
     try   { await ping(); setOnline(true);  }
     catch { setOnline(false); }
@@ -184,10 +173,8 @@ export default function DashboardPage() {
     return () => clearInterval(iv);
   }, [checkOnline]);
 
-  // ── Logout ──────────────────────────────────────────────────────────────
   const handleLogout = () => { clearCredentials(); router.replace("/"); };
 
-  // ── Active component ────────────────────────────────────────────────────
   const ActiveComponent = useMemo(
     () => NAV_ITEMS.find(n => n.id === activeTab)?.component ?? DashboardHome,
     [activeTab],
@@ -195,90 +182,214 @@ export default function DashboardPage() {
 
   const activeItem = NAV_ITEMS.find(n => n.id === activeTab)!;
 
-  // ── Nav click ───────────────────────────────────────────────────────────
   const handleNav = (id: TabId) => {
     setActiveTab(id);
-    if (isMobile) setMobileDrawer(false);
+    if (winW < 1024) setMobileDrawer(false);
   };
 
-  // ── Sidebar width ───────────────────────────────────────────────────────
-  const sidebarW = isMobile ? 0 : collapsed ? 64 : 240;
+  const sidebarW = collapsed ? 64 : 240;
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ── Render ───────────────────────────────────────────────────────────────
 
   return (
     <>
-      {/* Global keyframes */}
       <style>{`
         @keyframes pg-ping    { 75%,100%{transform:scale(2.2);opacity:0;} }
         @keyframes pg-fadein  { from{opacity:0;transform:translateX(-6px);}to{opacity:1;transform:none;} }
-        @keyframes pg-slidein { from{opacity:0;transform:translateX(-100%);}to{opacity:1;transform:none;} }
         @keyframes pg-content { from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;} }
         * { box-sizing: border-box; }
-        ::-webkit-scrollbar        { width:5px; height:5px; }
-        ::-webkit-scrollbar-track  { background:transparent; }
-        ::-webkit-scrollbar-thumb  { background:rgba(0,212,255,0.2); border-radius:3px; }
+        ::-webkit-scrollbar       { width:5px; height:5px; }
+        ::-webkit-scrollbar-track { background:transparent; }
+        ::-webkit-scrollbar-thumb { background:rgba(0,212,255,0.2); border-radius:3px; }
         ::-webkit-scrollbar-thumb:hover { background:rgba(0,212,255,0.4); }
       `}</style>
 
+      {/* Root wrapper — NO overflow:hidden agar position:fixed sidebar bisa tampil */}
       <div style={{
         display: "flex", minHeight: "100vh",
         background: "var(--jarvis-bg, #050a18)",
         color: "#e2e8f0", fontFamily: "'Segoe UI', system-ui, sans-serif",
         position: "relative",
-        // ❌ overflow: "hidden" dihapus — memblokir position:fixed sidebar di mobile
       }}>
 
-        {/* ── Mobile drawer backdrop ──────────────────────────────────── */}
+        {/* Backdrop (mobile/tablet) */}
         {mobileDrawer && (
           <div
             onClick={() => setMobileDrawer(false)}
             style={{
               position: "fixed", inset: 0,
-              zIndex: 120,  // di bawah sidebar (130) tapi di atas konten (80)
+              zIndex: 120,
               background: "rgba(0,0,0,0.6)",
               backdropFilter: "blur(4px)",
-              // Hanya tampil di mobile — di desktop tidak perlu
-              display: isMobile ? "block" : "none",
+              display: winW > 0 && winW < 1024 ? "block" : "none",
             }}
           />
         )}
 
-        {/* ══════════════════════════════════════════════════════════════
-            SIDEBAR
-        ══════════════════════════════════════════════════════════════ */}
+        {/* ── Sidebar ───────────────────────────────────────────────── */}
         <aside style={{
-          width:      isMobile ? 260 : sidebarW,
-          minHeight:  "100vh",
-          flexShrink: 0,
-          display:    "flex", flexDirection: "column",
-          background: "rgba(8,12,26,0.98)",
-          borderRight: "1px solid rgba(0,212,255,0.12)",
-          backdropFilter: "blur(20px)",
-          overflowX:  "hidden", overflowY: "auto",
-          // transition berbeda untuk mobile vs desktop — tidak duplikat
-          transition: isMobile
-            ? "transform 0.28s cubic-bezier(.4,0,.2,1)"
-            : "width 0.28s cubic-bezier(.4,0,.2,1)",
+          // Desktop: sticky, width animate on collapse
+          // Mobile/tablet: fixed drawer, translate on open/close
           ...(isMobile ? {
-            position:  "fixed" as const,
-            top:       0,
-            left:      0,
-            height:    "100vh",
-            zIndex:    130,
-            width:     260,
-            transform: mobileDrawer ? "translateX(0)" : "translateX(-100%)",
-            boxShadow: mobileDrawer ? "4px 0 32px rgba(0,0,0,0.6)" : "none",
+            position:   "fixed" as const,
+            top:        0,
+            left:       0,
+            height:     "100vh",
+            width:      260,
+            zIndex:     130,
+            transform:  mobileDrawer ? "translateX(0)" : "translateX(-100%)",
+            transition: "transform 0.28s cubic-bezier(.4,0,.2,1)",
+            boxShadow:  mobileDrawer ? "4px 0 32px rgba(0,0,0,0.6)" : "none",
           } : {
-            position: "sticky" as const,
-            top:      0,
-            height:   "100vh",
+            position:   "sticky" as const,
+            top:        0,
+            height:     "100vh",
+            width:      sidebarW,
+            transition: "width 0.28s cubic-bezier(.4,0,.2,1)",
           }),
+          flexShrink:    0,
+          display:       "flex",
+          flexDirection: "column",
+          background:    "rgba(8,12,26,0.98)",
+          borderRight:   "1px solid rgba(0,212,255,0.12)",
+          backdropFilter:"blur(20px)",
+          overflowX:     "hidden",
+          overflowY:     "auto",
         }}>
 
-        {/* ══════════════════════════════════════════════════════════════
-            MAIN
-        ══════════════════════════════════════════════════════════════ */}
+          {/* Logo */}
+          <div style={{
+            padding: collapsed ? "22px 0" : "22px 18px",
+            borderBottom: "1px solid rgba(0,212,255,0.1)",
+            display: "flex", alignItems: "center",
+            justifyContent: collapsed ? "center" : "flex-start",
+            gap: 12, flexShrink: 0,
+          }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: "50%", flexShrink: 0,
+              background: "linear-gradient(135deg,rgba(0,212,255,0.35),rgba(124,58,237,0.35))",
+              border: "1px solid rgba(0,212,255,0.5)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 18, boxShadow: "0 0 14px rgba(0,212,255,0.18)",
+            }}>
+              🤖
+            </div>
+            {!collapsed && (
+              <div style={{ animation: "pg-fadein 0.2s ease both" }}>
+                <div style={{
+                  fontSize: "1.05rem", fontWeight: 900, color: "#00d4ff",
+                  letterSpacing: "0.18em",
+                }}>
+                  JARVIS
+                </div>
+                <div style={{
+                  fontSize: "0.56rem", color: "rgba(226,232,240,0.35)",
+                  letterSpacing: "0.18em", textTransform: "uppercase",
+                }}>
+                  System Control
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Status */}
+          {!collapsed && (
+            <div style={{
+              padding: "12px 18px", flexShrink: 0,
+              borderBottom: "1px solid rgba(0,212,255,0.06)",
+              background: "rgba(0,212,255,0.02)",
+              display: "flex", alignItems: "center", gap: 10,
+            }}>
+              <StatusDot online={online} />
+              <span style={{
+                fontSize: "0.78rem", fontWeight: 500,
+                color: online === null ? "#f59e0b" : online ? "#10b981" : "#ef4444",
+              }}>
+                {online === null ? "Initializing…" : online ? "Connected" : "Disconnected"}
+              </span>
+            </div>
+          )}
+
+          {/* Nav */}
+          <nav style={{
+            flex: 1,
+            padding: collapsed ? "12px 8px" : "12px 10px",
+            display: "flex", flexDirection: "column", gap: 3,
+          }}>
+            {NAV_ITEMS.map(item => (
+              <NavButton
+                key={item.id}
+                item={item}
+                active={activeTab === item.id}
+                collapsed={collapsed}
+                onClick={() => handleNav(item.id)}
+              />
+            ))}
+          </nav>
+
+          {/* Footer */}
+          <div style={{
+            padding: collapsed ? "12px 8px" : "12px 10px",
+            borderTop: "1px solid rgba(0,212,255,0.07)",
+            display: "flex", flexDirection: "column", gap: 3, flexShrink: 0,
+          }}>
+            {/* Collapse toggle — desktop only */}
+            {!isMobile && (
+              <button
+                onClick={() => setSidebarOpen(v => !v)}
+                title={collapsed ? "Expand" : "Collapse"}
+                style={{
+                  width: "100%", border: "none", textAlign: "left",
+                  padding: collapsed ? "10px 0" : "10px 14px",
+                  borderRadius: 10,
+                  display: "flex", alignItems: "center",
+                  justifyContent: collapsed ? "center" : "flex-start",
+                  gap: collapsed ? 0 : 12,
+                  cursor: "pointer",
+                  background: "transparent",
+                  color: "rgba(226,232,240,0.4)",
+                  fontFamily: "inherit",
+                }}
+              >
+                <span style={{ fontSize: "0.9rem" }}>
+                  {collapsed ? "▶" : "◀"}
+                </span>
+                {!collapsed && (
+                  <span style={{ fontSize: "0.85rem", animation: "pg-fadein 0.2s ease both" }}>
+                    Collapse
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              title={collapsed ? "Logout" : undefined}
+              style={{
+                width: "100%", border: "none", textAlign: "left",
+                padding: collapsed ? "10px 0" : "10px 14px",
+                borderRadius: 10,
+                display: "flex", alignItems: "center",
+                justifyContent: collapsed ? "center" : "flex-start",
+                gap: collapsed ? 0 : 12,
+                cursor: "pointer",
+                background: "transparent",
+                color: "#ef4444",
+                fontFamily: "inherit",
+              }}
+            >
+              <span style={{ fontSize: "1.1rem" }}>🚪</span>
+              {!collapsed && (
+                <span style={{ fontSize: "0.88rem", fontWeight: 500, animation: "pg-fadein 0.2s ease both" }}>
+                  Logout
+                </span>
+              )}
+            </button>
+          </div>
+        </aside>
+
+        {/* ── Main content ──────────────────────────────────────────── */}
         <main style={{
           flex: 1, display: "flex", flexDirection: "column",
           minWidth: 0, minHeight: "100vh",
@@ -286,19 +397,17 @@ export default function DashboardPage() {
 
           {/* Header */}
           <header style={{
-            padding: "0 20px",
-            height: 58,
-            flexShrink: 0,
+            padding: "0 20px", height: 58, flexShrink: 0,
             borderBottom: "1px solid rgba(0,212,255,0.1)",
             background: "rgba(8,12,26,0.88)",
             backdropFilter: "blur(16px)",
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            position: "sticky", top: 0, zIndex: 80,
-            gap: 12,
+            position: "sticky", top: 0, zIndex: 80, gap: 12,
           }}>
 
-            {/* Left: hamburger (mobile+tablet < 1024px) + page title */}
+            {/* Left */}
             <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+              {/* Hamburger — tampil di semua layar < 1024px */}
               {winW > 0 && winW < 1024 && (
                 <button
                   onClick={() => setMobileDrawer(v => !v)}
@@ -306,20 +415,23 @@ export default function DashboardPage() {
                   style={{
                     background: mobileDrawer ? "rgba(0,212,255,0.1)" : "none",
                     border: mobileDrawer ? "1px solid rgba(0,212,255,0.2)" : "none",
-                    borderRadius: 6,
-                    color: "#00d4ff", fontSize: "1.4rem",
+                    borderRadius: 6, color: "#00d4ff", fontSize: "1.4rem",
                     cursor: "pointer", flexShrink: 0,
                     display: "flex", alignItems: "center",
-                    padding: "2px 6px", lineHeight: 1,
+                    padding: "2px 6px", lineHeight: "1",
                   }}
-                >☰</button>
+                >
+                  ☰
+                </button>
               )}
               <h1 style={{
                 display: "flex", alignItems: "center", gap: 10,
                 fontSize: "0.98rem", fontWeight: 700, color: "#e2e8f0",
                 margin: 0, minWidth: 0,
               }}>
-                <span style={{ fontSize: "1.2rem", flexShrink: 0 }}>{activeItem.icon}</span>
+                <span style={{ fontSize: "1.2rem", flexShrink: 0 }}>
+                  {activeItem.icon}
+                </span>
                 <span style={{
                   whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                   display: winW < 400 ? "none" : "inline",
@@ -329,7 +441,7 @@ export default function DashboardPage() {
               </h1>
             </div>
 
-            {/* Right: status badge + clock */}
+            {/* Right */}
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
               <div style={{
                 display: "flex", alignItems: "center", gap: 7,
@@ -350,13 +462,11 @@ export default function DashboardPage() {
                   {online ? "ONLINE" : "OFFLINE"}
                 </span>
               </div>
-
               {winW >= 560 && (
                 <span style={{
                   fontSize: "0.78rem", color: "rgba(226,232,240,0.45)",
-                  fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                  fontFamily: "'JetBrains Mono','Courier New',monospace",
                   background: "rgba(0,0,0,0.3)", padding: "4px 10px", borderRadius: 6,
-                  letterSpacing: "0.04em",
                 }}>
                   {time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                 </span>
@@ -366,14 +476,16 @@ export default function DashboardPage() {
 
           {/* Content */}
           <div style={{
-            flex: 1,
-            padding: winW < 640 ? "16px" : "24px",
+            flex: 1, padding: winW < 640 ? "16px" : "24px",
             overflowY: "auto", overflowX: "hidden",
           }}>
-            <div style={{
-              maxWidth: 1400, margin: "0 auto",
-              animation: "pg-content 0.3s ease both",
-            }} key={activeTab}>
+            <div
+              key={activeTab}
+              style={{
+                maxWidth: 1400, margin: "0 auto",
+                animation: "pg-content 0.3s ease both",
+              }}
+            >
               <ActiveComponent />
             </div>
           </div>
